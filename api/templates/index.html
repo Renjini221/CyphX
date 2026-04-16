@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Cyph-X</title>
+        <style>
+            body{
+                font-family:Inter,sans-serif;
+                background:#f9fafb;
+                display:flex;
+                justify-content:center;
+                align-items:center;
+                height:100vh;
+                margin:0;
+            }
+            .card{
+                background:white;
+                padding:30px;
+                border-radius:16px;
+                width:420px;
+                box-shadow:0 4px 12px rgba(0,0,0,0.08);
+
+            }
+            h2{
+                margin:0;
+                color:#111827;
+
+            }
+            p{
+                color:#6b7280;
+                margin-bottom:20px;
+            }
+            .input{
+                flex:1;
+                padding:10px;
+                border-radius:8px;
+                border:1px solid #ddd;
+            }
+            button{
+                background:#2563eb;
+                color:white;
+                border:none;
+                padding:10px 15px;
+                border-radius:8px;
+                cursor:pointer;
+
+            }
+            button:hover{
+                background:#1d4ed8;
+
+            }
+            #result{
+                margin-top:20px;
+
+            }
+            .safe{
+                background:#d1fae5;
+                color:#065f46;
+                padding:12px;
+                border-radius:8px;
+            }
+            .suspicious{
+                background:#fef3c7;
+                color:#92400e;
+                padding:12px;
+                border-radius:8px;
+            }
+            .danger{
+                background:#fee2e2;
+                color:#991b1b;
+                padding:12px;
+                border-radius:8px;
+            }
+            .input-row{
+                display:flex;
+                gap:20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h2>Cyph X</h2>
+            <p>Be Safe , Be Ready</p>
+
+            <div class="input-row">
+                <input id="domainInput" class="input" placeholder="www.vercel.com">
+                <button onclick="checkDomain()">Check</button>
+            </div>
+            <div id="result"></div>
+        </div>
+        <script>
+            async function checkDomain(){
+                const val = document.getElementById("domainInput").value.trim();
+                const el = document.getElementById("result");
+
+                if(!val) return;
+
+                el.innerHTML= "Cheking..pls wait";
+
+                const res = await fetch("/check",{
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify({url:val})
+                });
+                const data = await res.json();
+
+                if(data.status === "safe"){
+                    el.innerHTML = `<div class="safe">${data.message}</div>`;
+
+                }
+                else if(data.status ==="suspicious"){
+                    el.innerHTML = `<div class="suspicious">${data.message}</div>`;
+
+                }
+                else{
+                    el.innerHTML=`<div class="danger">${data.message}</div>`;
+
+                }
+            }
+        </script>
+
+    </body>
+</html>
