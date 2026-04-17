@@ -78,5 +78,5 @@ def check():
             return jsonify({"status": "suspicious", "message": "AI flagged this as suspicious"})
         else:
             return jsonify({"status": "safe", "message": "Looks safe"})
- except Exception as e:
+    except Exception as e:
         return jsonify({"status": "safe", "message": str(e)})
