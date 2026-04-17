@@ -36,9 +36,8 @@ def check():
     data = res.json()
 
     risk = 0
-
-    if data:
-           return jsonify({"status":"danger","message":"Scam btw"})
+ if "matches" in data:
+          return jsonify({"status":"danger","message":"Scam Btw"})
         
     if any(word in url for word in ["login","verify","bank","secure"]):
            risk=risk+2
