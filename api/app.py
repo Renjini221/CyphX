@@ -36,10 +36,6 @@ def check():
     risk = 0
 
     domain = url.split("/")[2]
-    vowels = sum(1 for c in domain if c in "aeiou")
-    consonants = sum(1 for c in domain if c.isalpha() and c not in "aeiou")
-    if consonants > 0 and vowels / (vowels + consonants) < 0.25:
-        risk += 2
 
     if len(domain) > 20:
         risk += 1
@@ -61,7 +57,7 @@ def check():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "gpt-4o-mini",
+                "model": "google/gemini-flash-1.5-8b",
                 "messages": [
                     {
                         "role": "user",
