@@ -67,7 +67,8 @@ def check():
                     "content": f"Is this URL a scam, phishing, or suspicious? Reply with only one word: safe, suspicious, or danger. URL: {url}"
                 }
             ]
-        }
+        },
+        timeout=10
     )
 
     verdict = ai_res.json()["choices"][0]["message"]["content"].strip().lower()
