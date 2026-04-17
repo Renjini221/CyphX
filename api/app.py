@@ -60,7 +60,7 @@ def check():
             "Content-Type": "application/json"
         },
         json={
-            "model": "mistralai/mistral-7b-instruct",
+            "model": "google/gemini-flash-1.5-8b",
             "messages": [
                 {
                     "role": "user",
