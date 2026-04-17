@@ -19,13 +19,14 @@ def check():
         url = "https://" + url
 
     domain = urlparse(url).netloc.replace("www.", "")
-
+    risk = 0
     brands = ["amazon" , "google" , "paypal" , "facebook" , "instagram" , "netflix" , "insta" , "fb"]
     for brand in brands:
-        if brand in domain and not domain.endswith(f{brand}.com)
+        if brand in domain and not domain.endswith(f"{brand}.com"):
         risk += 3
-    # 🔹 Heuristic
-    risk = 0
+    
+    if "login" in domain or "secure" in domain or "verify" in domain:
+        risk +=1
 
     if len(domain) > 20:
         risk += 1
