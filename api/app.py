@@ -53,29 +53,30 @@ def check():
     if "matches" in data:
         return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing"})
 
-    ai_res = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "google/gemini-flash-1.5-8b",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"Is this URL a scam, phishing, or suspicious? Reply with only one word: safe, suspicious, or danger. URL: {url}"
-                }
-            ]
-        },
-        timeout=10
-    )
-
-    verdict = ai_res.json()["choices"][0]["message"]["content"].strip().lower()
-
-    if "danger" in verdict:
-        return jsonify({"status": "danger", "message": "AI flagged this as dangerous"})
-    elif "suspicious" in verdict:
-        return jsonify({"status": "suspicious", "message": "AI flagged this as suspicious"})
-    else:
+    try:
+        ai_res = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "google/gemini-flash-1.5-8b",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"Is this URL a scam, phishing, or suspicious? Reply with only one word: safe, suspicious, or danger. URL: {url}"
+                    }
+                ]
+            },
+            timeout=25
+        )
+        verdict = ai_res.json()["choices"][0]["message"]["content"].strip().lower()
+        if "danger" in verdict:
+            return jsonify({"status": "danger", "message": "AI flagged this as dangerous"})
+        elif "suspicious" in verdict:
+            return jsonify({"status": "suspicious", "message": "AI flagged this as suspicious"})
+        else:
+            return jsonify({"status": "safe", "message": "Looks safe"})
+    except Exception:
         return jsonify({"status": "safe", "message": "Looks safe"})
