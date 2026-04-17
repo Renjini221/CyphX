@@ -111,5 +111,7 @@ URL: {url}
 
 if__name__ == "__main__":
     app.run()
-    
-handler = app            
+
+app = app    
+handler = app 
+application = app           
