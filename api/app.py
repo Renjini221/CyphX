@@ -61,7 +61,7 @@ def check():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "google/gemini-flash-1.5-8b",
+                "model": "mistralai/mistral-7b-instruct:free",
                 "messages": [
                     {
                         "role": "user",
