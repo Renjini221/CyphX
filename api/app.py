@@ -74,7 +74,7 @@ def check():
         if "danger" in verdict:
             return jsonify({"status": "danger", "message": "AI flagged this as dangerous"})
         elif "suspicious" in verdict:
-            return jsonify({"status": "suspicious", "message": "AI flagged this as suspicious"})
+           return suspicious
         else:
             return jsonify({"status": "safe", "message": "Looks safe"})
     except Exception as e:
