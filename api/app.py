@@ -20,7 +20,7 @@ def check():
 
     domain = urlparse(url).netloc.replace("www.", "")
 
-    brands = ["amazon" , "google" , "paypal" , "facebook" , "instagram" , "netflix"]
+    brands = ["amazon" , "google" , "paypal" , "facebook" , "instagram" , "netflix" , "insta" , "fb"]
     for brand in brands:
         if brand in domain and not domain.endswith(f{brand}.com)
         risk += 3
