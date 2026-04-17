@@ -57,7 +57,7 @@ def check():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "google/gemini-flash-1.5-8b",
+                "model": "gpt-4o-mini",
                 "messages": [
                     {
                         "role": "user",
