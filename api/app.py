@@ -61,7 +61,7 @@ def check():
                 "messages": [
                     {
                         "role": "user",
-                        "content": f"Is this URL a scam, phishing, or suspicious? Reply with only one word: safe, suspicious, or danger. URL: {url}"
+                        "content": f"Is this URL a scam, phishing, or suspicious? Reply with only one word: safe, suspicious, or danger Analyze this URL for phishing risk.Only mark as danger if strong evidence of scam or impersonation.If unsure, reply safe.Reply ONLY: safe, suspicious, or danger. . URL: {url}"
                     }
                 ]
             },
