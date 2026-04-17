@@ -51,6 +51,5 @@ def check():
     else:
             return jsonify({"status":"safe","message":"safe"})
 
-if __name__ == "__main__":
-    app.run(debug=True)
+
 
