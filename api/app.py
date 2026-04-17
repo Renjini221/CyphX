@@ -71,7 +71,10 @@ def check():
             },
             timeout=25
         )
-        verdict = ai_res.json()["choices"][0]["message"]["content"].strip().lower()
+        response_json=ai_res.json()
+        if "choices" not in response_json:
+            return jsonify({"status":"safe","message":str(response_json)})
+        verdict = response_json["choices"][0]["message"]["content"].strip().lower()
         if "danger" in verdict:
             return jsonify({"status": "danger", "message": "AI flagged this as dangerous"})
         elif "suspicious" in verdict:
