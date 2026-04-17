@@ -23,7 +23,7 @@ def check():
     brands = ["amazon" , "google" , "paypal" , "facebook" , "instagram" , "netflix" , "insta" , "fb"]
     for brand in brands:
         if brand in domain and not domain.endswith(f"{brand}.com"):
-        risk += 3
+            risk += 3
     
     if "login" in domain or "secure" in domain or "verify" in domain:
         risk +=1
@@ -108,3 +108,8 @@ URL: {url}
 
     except Exception as e:
         return jsonify({"status": "suspicious", "message": "Error analyzing URL"})
+
+if__name__ == "__main__":
+    app.run()
+    
+handler = app            
