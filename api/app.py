@@ -61,7 +61,7 @@ def check():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "mistralai/mistral-7b-instruct:free",
+                "model": "gpt-4o-mini",
                 "messages": [
                     {
                         "role": "user",
