@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import requests
 import os
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
@@ -15,8 +16,22 @@ def check():
     url = request.json.get("url")
 
     if not url.startswith("http"):
-        url = "http://" + url
+        url = "https://" + url
 
+    domain = urlparse(url).netloc.replace("www.", "")
+
+    # 🔹 Heuristic
+    risk = 0
+
+    if len(domain) > 20:
+        risk += 1
+
+    if sum(c.isdigit() for c in domain) > 3:
+        risk += 1
+
+    heuristic_flag = risk >= 2
+
+    # 🔹 Google Safe Browsing
     body = {
         "client": {"clientId": "cyberCheck", "clientVersion": "1.0"},
         "threatInfo": {
@@ -31,24 +46,13 @@ def check():
         f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={apikey}",
         json=body
     )
+
     data = res.json()
-
-    risk = 0
-
-    domain = url.split("/")[2]
-
-    if len(domain) > 20:
-        risk += 1
-
-    if sum(c.isdigit() for c in domain) > 3:
-        risk += 1
-
-    if risk >= 2:
-        return jsonify({"status": "suspicious", "message": "Suspicious domain pattern detected"})
 
     if "matches" in data:
         return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing"})
 
+    # 🔹 AI Check
     try:
         ai_res = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -61,21 +65,41 @@ def check():
                 "messages": [
                     {
                         "role": "user",
-                        "content": f"Is this URL a scam, phishing, or suspicious? Reply with only one word: safe, suspicious, or danger Analyze this URL for phishing risk.Only mark as danger if strong evidence of scam or impersonation.If unsure, reply safe.Reply ONLY: safe, suspicious, or danger. . URL: {url}"
+                        "content": f"""
+Analyze this URL for phishing risk.
+
+Only mark as "danger" if strong evidence exists.
+If unsure, reply "safe".
+
+Reply ONLY: safe, suspicious, or danger.
+
+URL: {url}
+"""
                     }
                 ]
             },
             timeout=25
         )
-        response_json=ai_res.json()
+
+        response_json = ai_res.json()
+
         if "choices" not in response_json:
-            return jsonify({"status":"safe","message":str(response_json)})
+            return jsonify({"status": "suspicious", "message": "AI error, proceed with caution"})
+
         verdict = response_json["choices"][0]["message"]["content"].strip().lower()
+
+        # 🔥 FINAL LOGIC
         if "danger" in verdict:
             return jsonify({"status": "danger", "message": "AI flagged this as dangerous"})
-        elif "suspicious" in verdict:
-           return suspicious
+
+        elif "suspicious" in verdict and heuristic_flag:
+            return jsonify({"status": "suspicious", "message": "Looks suspicious"})
+
+        elif heuristic_flag:
+            return jsonify({"status": "suspicious", "message": "Suspicious pattern detected"})
+
         else:
             return jsonify({"status": "safe", "message": "Looks safe"})
+
     except Exception as e:
-        return jsonify({"status": "safe", "message": str(e)})
+        return jsonify({"status": "suspicious", "message": "Error analyzing URL"})
