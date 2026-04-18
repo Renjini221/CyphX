@@ -66,7 +66,7 @@ def check():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "gpt-4o-mini",
+                "model": "openai/gpt-4o-mini",
                 "messages": [
                     {
                         "role": "user",
@@ -109,9 +109,4 @@ URL: {url}
     except Exception as e:
         return jsonify({"status": "suspicious", "message": "Error analyzing URL"})
 
-if__name__ == "__main__":
-    app.run()
-
-app = app    
-handler = app 
-application = app           
+      
