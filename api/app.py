@@ -3,6 +3,7 @@ import requests
 import os
 import difflib
 from urllib.parse import urlparse
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -41,7 +42,42 @@ def check():
         risk += 1
 
     heuristic_flag = risk >= 2
+    
+    whois_info={}
+    try:
+        whois_res=requests.get(
+            f"https://whoisjson.com/api/v1/whois?domain={domain}",
+            timeout=10
+        )
+        whois_data = whois_res.json()
+        created = whois_data.get("created","")
+        expires = whois_data.get("expires","")
+        registrar = whois_data.get("registrar","")
+        country = whois_data.get("country","")
 
+        age_days = None
+        if created:
+            try:
+                created_date = datetime.strptime(created[:10],"%Y-%m-%d")
+                age_days = (datetime.now() - created_date).days
+            except:
+                pass
+
+            whois_info = {
+                "created": created or "unknown",
+                "expires": expires or "unknown",
+                "registrar": registrar or "unknown",
+                "country": country or "unknown",
+                "age_days": age_days
+            }   
+            if age_days is not None and age_days < 30:
+                return jsonify({
+                    "status":"suspicious",
+                    "message":f"Domain is only {age_days} days old",
+                    "whois": whois_info
+                })
+    except:
+          pass
     # 🔹 Google Safe Browsing
     body = {
         "client": {"clientId": "cyberCheck", "clientVersion": "1.0"},
