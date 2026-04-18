@@ -3,126 +3,159 @@
     <head>
         <title>Cyph-X</title>
         <style>
-            body{
-                font-family:Inter,sans-serif;
-                background:#f9fafb;
-                display:flex;
-                justify-content:center;
-                align-items:center;
-                height:100vh;
-                margin:0;
+            * {
+                box-sizing: border-box;
             }
-            .card{
-                background:white;
-                padding:30px;
-                border-radius:16px;
-                width:420px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
 
+            body {
+                font-family: Inter, sans-serif;
+                background: #f9fafb;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
             }
-            h2{
-                margin:0;
-                color:#111827;
 
+            .card {
+                background: white;
+                padding: 30px;
+                border-radius: 16px;
+                width: 100%;
+                max-width: 420px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                max-height: 90vh;
+                overflow-y: auto;
             }
-            p{
-                color:#6b7280;
-                margin-bottom:20px;
-            }
-            .input{
-                flex:1;
-                padding:10px;
-                border-radius:8px;
-                border:1px solid #ddd;
-            }
-            button{
-                background:#2563eb;
-                color:white;
-                border:none;
-                padding:10px 15px;
-                border-radius:8px;
-                cursor:pointer;
 
+            h2 {
+                margin: 0 0 4px 0;
+                color: #111827;
+                font-size: 22px;
             }
-            button:hover{
-                background:#1d4ed8;
 
+            p {
+                color: #6b7280;
+                margin-bottom: 20px;
+                font-size: 14px;
             }
-            #result{
-                margin-top:20px;
 
+            .input-row {
+                display: flex;
+                gap: 10px;
             }
-            .safe{
-                background:#d1fae5;
-                color:#065f46;
-                padding:12px;
-                border-radius:8px;
+
+            .input {
+                flex: 1;
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                font-size: 14px;
+                outline: none;
+                transition: border 0.2s;
             }
-            .suspicious{
-                background:#fef3c7;
-                color:#92400e;
-                padding:12px;
-                border-radius:8px;
+
+            .input:focus {
+                border-color: #2563eb;
             }
-            .danger{
-                background:#fee2e2;
-                color:#991b1b;
-                padding:12px;
-                border-radius:8px;
+
+            button {
+                background: #2563eb;
+                color: white;
+                border: none;
+                padding: 10px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                transition: background 0.2s;
             }
-            .input-row{
-                display:flex;
-                gap:20px;
+
+            button:hover {
+                background: #1d4ed8;
             }
-            .history{
-                margin-top:20px;
-                border-top:1px solid #f3f4f6;
-                padding-top:12px;
+
+            #result {
+                margin-top: 20px;
             }
-            .history h4{
-                margin:0 0 8px 0;
-                font-size:13px;
-                color:#9ca3af;
+
+            .safe {
+                background: #d1fae5;
+                color: #065f46;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
             }
-            .history-item{
-                display:flex;
-                justify-content:center;
-                align-items:center;
-                padding:6px 0;
-                font-size:13px;
-                border-bottom:1px solid #f9fafb;
+
+            .suspicious {
+                background: #fef3c7;
+                color: #92400e;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
             }
-            .dot{
-                width:8px;
-                height:8px;
-                border-radius:50%;
-                display:inline-block;
-                margin-right:6px;
+
+            .danger {
+                background: #fee2e2;
+                color: #991b1b;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
             }
-            .dot-safe{
-                background:#10b981;
+
+            .whois {
+                margin-top: 12px;
+                font-size: 13px;
+                color: #6b7280;
+                border-top: 1px solid #f3f4f6;
+                padding-top: 12px;
             }
-            .dot-suspicious{
-                background:#f59e0b;
+
+            .whois p {
+                margin: 4px 0;
             }
-            .dot-danger{
-                background:#ef4444;
+
+            .history {
+                margin-top: 20px;
+                border-top: 1px solid #f3f4f6;
+                padding-top: 12px;
             }
-            .card{
-                background:white;
-                padding:30px;
-                border-radius:16px;
-                width:420px;
-                max-height:90vh;
-                overflow-y:auto;
+
+            .history h4 {
+                margin: 0 0 8px 0;
+                font-size: 13px;
+                color: #9ca3af;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
             }
+
+            .history-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 6px 0;
+                font-size: 13px;
+                border-bottom: 1px solid #f9fafb;
+            }
+
+            .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 6px;
+            }
+
+            .dot-safe { background: #10b981; }
+            .dot-suspicious { background: #f59e0b; }
+            .dot-danger { background: #ef4444; }
         </style>
     </head>
     <body>
         <div class="card">
             <h2>Cyph X</h2>
             <p>Be Safe , Be Ready</p>
-
             <div class="input-row">
                 <input id="domainInput" class="input" placeholder="www.vercel.com">
                 <button onclick="checkDomain()">Check</button>
@@ -131,7 +164,7 @@
             <div id="history"></div>
         </div>
         <script>
-             let checkHistory = [];
+            let checkHistory = [];
 
             async function checkDomain(){
                 const val = document.getElementById("domainInput").value.trim();
@@ -139,33 +172,39 @@
 
                 if(!val) return;
 
-                el.innerHTML= "Cheking..pls wait";
+                el.innerHTML = "Checking... pls wait";
 
                 const res = await fetch("/check",{
-                    method:"POST",
-                    headers:{
-                        "Content-Type":"application/json"
-                    },
-                    body:JSON.stringify({url:val})
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({url: val})
                 });
                 const data = await res.json();
 
                 if(data.status === "safe"){
                     el.innerHTML = `<div class="safe">${data.message}</div>`;
-
-                }
-                else if(data.status ==="suspicious"){
+                } else if(data.status === "suspicious"){
                     el.innerHTML = `<div class="suspicious">${data.message}</div>`;
-
+                } else {
+                    el.innerHTML = `<div class="danger">${data.message}</div>`;
                 }
-                else{
-                    el.innerHTML=`<div class="danger">${data.message}</div>`;
 
+                if(data.whois && data.whois.created){
+                    el.innerHTML += `
+                    <div class="whois">
+                        <p><b>Registered:</b> ${data.whois.created}</p>
+                        <p><b>Expires:</b> ${data.whois.expires}</p>
+                        <p><b>Registrar:</b> ${data.whois.registrar}</p>
+                        <p><b>Country:</b> ${data.whois.country}</p>
+                        ${data.whois.age_days !== null ? `<p><b>Domain Age:</b> ${data.whois.age_days} days</p>` : ""}
+                    </div>`;
                 }
-                checkHistory.unshift({url:val,status:data.status});
+
+                checkHistory.unshift({url: val, status: data.status});
                 if(checkHistory.length > 5) checkHistory.pop();
                 renderHistory();
             }
+
             function renderHistory(){
                 const el = document.getElementById("history");
                 if(checkHistory.length === 0) return;
@@ -175,11 +214,9 @@
                     <div class="history-item">
                         <span><span class="dot dot-${item.status}"></span>${item.url}</span>
                         <span>${item.status}</span>
-                        </div>
-                        `).join("")}
-                        </div>`;
-                    }
+                    </div>`).join("")}
+                </div>`;
+            }
         </script>
-
     </body>
 </html>
