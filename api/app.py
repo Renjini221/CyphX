@@ -47,6 +47,7 @@ def check():
     try:
         whois_res=requests.get(
             f"https://whoisjson.com/api/v1/whois?domain={domain}",
+            headers={"Authorization":f"TOKEN={os.environ.get('WHOIS_API_KEY')}"},
             timeout=10
         )
         whois_data = whois_res.json()
