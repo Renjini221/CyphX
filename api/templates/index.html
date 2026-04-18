@@ -74,6 +74,40 @@
                 display:flex;
                 gap:20px;
             }
+            .history{
+                margin-top:20px;
+                border-top:1px solid #f3f4f6;
+                padding-top:12px;
+            }
+            .history h4{
+                margin:0 0 8px 0;
+                font-size:13px;
+                color:#9ca3af;
+            }
+            .history-item{
+                display:flex;
+                justify-content:center;
+                align-items:center;
+                padding:6px 0;
+                font-size:13px;
+                border-bottom:1px solid #f9fafb;
+            }
+            .dot{
+                width:8px;
+                height:8px;
+                border-radius:50%;
+                display:inline-block;
+                margin-right:6px;
+            }
+            .dot-safe{
+                background:#10b981;
+            }
+            .dot-suspicious{
+                background:#f59e0b;
+            }
+            .dot-danger{
+                background:#ef4444;
+            }
         </style>
     </head>
     <body>
@@ -86,8 +120,11 @@
                 <button onclick="checkDomain()">Check</button>
             </div>
             <div id="result"></div>
+            <div id="history"></div>
         </div>
         <script>
+             let checkHistory = [];
+
             async function checkDomain(){
                 const val = document.getElementById("domainInput").value.trim();
                 const el = document.getElementById("result");
@@ -117,7 +154,23 @@
                     el.innerHTML=`<div class="danger">${data.message}</div>`;
 
                 }
+                checkHistory.unshift({url:val,status:data.status});
+                if(checkHistory.length > 5) checkHistory.pop();
+                renderHistory();
             }
+            function renderHistory(){
+                const el = document.getElementById("history");
+                if(checkHistory.length === 0) return;
+                el.innerHTML = `<div class="history">
+                    <h4>Recent checks</h4>
+                    ${checkHistory.map(item => `
+                    <div class="history-item">
+                        <span><span class="dot dot-${item.status}"></span>${item.url}</span>
+                        <span>${item.status}</span>
+                        </div>
+                        `).join("")}
+                        </div>`;
+                    }
         </script>
 
     </body>
