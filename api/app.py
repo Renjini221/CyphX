@@ -22,14 +22,15 @@ def check():
     domain = urlparse(url).netloc.replace("www.", "")
     risk = 0
     brands = ["amazon" , "google" , "paypal" , "facebook" , "instagram" , "netflix" , "insta" , "fb"]
-    for brand in brands:
-        if brand in domain and domain != f"{brand}.com":
-            risk += 3
-        elif domain.split(".")[0] != brand:
-            ratio = difflib.SequenceMatcher(None,brand,domain.split(".")[0]).ratio()
-            if ratio > 0.6 and domain != f"{brand}.com":
-               risk+=3
-
+    safe_domains = ["instagram.com" , "facebook.com","amazon.com" , "google.com" ,"paypal.com" , "netflix.com"]
+    if domain not in safe_domains:
+        for brand in brands:
+            if brand in domain:
+                risk += 3
+            else:
+                ratio = difflib.SequenceMatcher(None,brand,domain.split(".")[0]).ratio()    
+                if ratio >0.6:
+                    risk += 3
     if "login" in domain or "secure" in domain or "verify" in domain:
         risk +=1
 
