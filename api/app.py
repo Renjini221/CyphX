@@ -105,7 +105,7 @@ URL: {url}
 
         else:
             return jsonify({"status": "safe", "message": "Looks safe"})
-except Exception as e:
+    except Exception as e:
         return jsonify({"status": "suspicious", "message": str(e)})
  
 
