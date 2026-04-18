@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import requests
 import os
+import difflib
 from urllib.parse import urlparse
 
 app = Flask(__name__)
@@ -24,7 +25,10 @@ def check():
     for brand in brands:
         if brand in domain and not domain.endswith(f"{brand}.com"):
             risk += 3
-    
+        elif domain.split(".")[0] != brand:
+            ratio = difflib.SequenceMatcher(None,brand,domain.split(".")[0]).ratio()
+            if ratio > 0.6 and not domain.endswith(f"{brand}.com"):
+               risk+=3
     if "login" in domain or "secure" in domain or "verify" in domain:
         risk +=1
 
@@ -105,8 +109,7 @@ URL: {url}
 
         else:
             return jsonify({"status": "safe", "message": "Looks safe"})
-    except Exception as e:
-        return jsonify({"status": "suspicious", "message": str(e)})
- 
 
-      
+    except Exception as e:
+        return jsonify({"status": "suspicious", "message": "Error analyzing URL"})
+ 
