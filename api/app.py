@@ -79,7 +79,7 @@ def check():
                 })
     except:
           pass
-    # 🔹 Google Safe Browsing
+    
     body = {
         "client": {"clientId": "cyberCheck", "clientVersion": "1.0"},
         "threatInfo": {
@@ -98,7 +98,7 @@ def check():
     data = res.json()
 
     if "matches" in data:
-        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing"})
+        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing","whois":whois_info})
 
     # 🔹 AI Check
     try:
@@ -132,23 +132,22 @@ URL: {url}
         response_json = ai_res.json()
 
         if "choices" not in response_json:
-            return jsonify({"status": "suspicious", "message": "AI error, proceed with caution"})
+            return jsonify({"status": "suspicious", "message": str(response_json),"whois":whois_info})
 
         verdict = response_json["choices"][0]["message"]["content"].strip().lower()
 
-        # 🔥 FINAL LOGIC
         if "danger" in verdict:
-            return jsonify({"status": "danger", "message": "AI flagged this as dangerous"})
+            return jsonify({"status": "danger", "message": "AI flagged this as dangerous","whois":whois_info})
 
         elif "suspicious" in verdict and heuristic_flag:
-            return jsonify({"status": "suspicious", "message": "Looks suspicious"})
+            return jsonify({"status": "suspicious", "message": "Looks suspicious","whois":whois_info})
 
         elif heuristic_flag:
-            return jsonify({"status": "suspicious", "message": "Suspicious pattern detected"})
+            return jsonify({"status": "suspicious", "message": "Suspicious pattern detected","whois":whois_info})
 
         else:
-            return jsonify({"status": "safe", "message": "Looks safe"})
+            return jsonify({"status": "safe", "message": "Looks safe","whois":whois_info})
 
     except Exception as e:
-        return jsonify({"status": "suspicious", "message": "Error analyzing URL"})
+        return jsonify({"status": "suspicious", "message": "Error analyzing URL","whois":whois_info})
  
