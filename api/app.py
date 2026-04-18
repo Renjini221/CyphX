@@ -64,14 +64,14 @@ def check():
             except:
                 pass
 
-            whois_info = {
+        whois_info = {
                 "created": created or "unknown",
                 "expires": expires or "unknown",
                 "registrar": registrar or "unknown",
                 "country": country or "unknown",
                 "age_days": age_days
             }   
-            if age_days is not None and age_days < 30:
+        if age_days is not None and age_days < 30:
                 return jsonify({
                     "status":"suspicious",
                     "message":f"Domain is only {age_days} days old",
