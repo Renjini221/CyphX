@@ -66,7 +66,7 @@ def check():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "openai/gpt-4o-mini",
+                "model": "gpt-4o-mini",
                 "messages": [
                     {
                         "role": "user",
