@@ -72,8 +72,43 @@ def check():
     except:
         pass
 
+    redirect_info = {}
+    try:
+        redirect_res = requests.get(url, timeout=5, allow_redirects=True)
+        final_url = redirect_res.url
+        redirect_chain = [r.url for r in redirect_res.history]
+        status_code = redirect_res.status_code
+
+        redirect_info = {
+            "final_url": final_url,
+            "redirect_count": len(redirect_chain),
+            "redirect_chain": redirect_chain,
+            "status_code": status_code,
+            "was_redirected": final_url != url
+        }
+
+        original_domain = urlparse(url).netloc.replace("www.", "")
+        final_domain = urlparse(final_url).netloc.replace("www.", "")
+
+        if original_domain != final_domain:
+            risk += 2
+            redirect_info["domain_changed"] = True
+        else:
+            redirect_info["domain_changed"] = False
+
+        if len(redirect_chain) > 3:
+            risk += 1
+            redirect_info["too_many_redirects"] = True
+        else:
+            redirect_info["too_many_redirects"] = False
+
+    except Exception as e:
+        redirect_info = {"error": str(e)}
+
+    heuristic_flag = risk >= 2
+
     if heuristic_flag:
-        return jsonify({"status": "suspicious", "message": "Suspicious pattern detected", "whois": whois_info})
+        return jsonify({"status": "suspicious", "message": "Suspicious pattern detected", "whois": whois_info, "redirect": redirect_info})
 
     body = {
         "client": {"clientId": "cyberCheck", "clientVersion": "1.0"},
@@ -92,7 +127,7 @@ def check():
     data = res.json()
 
     if "matches" in data:
-        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing", "whois": whois_info})
+        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing", "whois": whois_info, "redirect": redirect_info})
 
     try:
         ai_res = requests.post(
@@ -118,13 +153,13 @@ URL: {url}"""
         )
         response_json = ai_res.json()
         if "choices" not in response_json:
-            return jsonify({"status": "suspicious", "message": str(response_json), "whois": whois_info})
+            return jsonify({"status": "suspicious", "message": str(response_json), "whois": whois_info, "redirect": redirect_info})
         verdict = response_json["choices"][0]["message"]["content"].strip().lower()
         if "danger" in verdict:
-            return jsonify({"status": "danger", "message": "AI flagged this as dangerous", "whois": whois_info})
+            return jsonify({"status": "danger", "message": "AI flagged this as dangerous", "whois": whois_info, "redirect": redirect_info})
         elif "suspicious" in verdict:
-            return jsonify({"status": "suspicious", "message": "Looks suspicious", "whois": whois_info})
+            return jsonify({"status": "suspicious", "message": "Looks suspicious", "whois": whois_info, "redirect": redirect_info})
         else:
-            return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info})
+            return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info, "redirect": redirect_info})
     except Exception as e:
-        return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info})
+        return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info, "redirect": redirect_info})
