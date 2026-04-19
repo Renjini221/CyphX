@@ -226,6 +226,15 @@
                     </div>`;
                 }
 
+                if(data.dns){
+                    el.innerHTML += `
+                    <div class="whois">
+                        <p><b>Resolved:</b> ${data.dns.resolved ? "Yes" : "No"}</p>
+                        <p><b>IPs:</b> ${data.dns.ips.join(", ") || "none"}</p>
+                        <p><b>IP Count:</b> ${data.dns.ip_count}</p>
+                    </div>`;
+                }
+
                 checkHistory.unshift({url: val, status: data.status});
                 if(checkHistory.length > 5) checkHistory.pop();
                 renderHistory();
