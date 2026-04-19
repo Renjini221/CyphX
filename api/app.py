@@ -1,153 +1,235 @@
-from flask import Flask, render_template, jsonify, request
-import requests
-import os
-import difflib
-from urllib.parse import urlparse
-from datetime import datetime
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Cyph-X</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
 
-app = Flask(__name__)
+            body {
+                font-family: Inter, sans-serif;
+                background: #f9fafb;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
+            }
 
-apikey = os.environ.get("apikey")
+            .card {
+                background: white;
+                padding: 30px;
+                border-radius: 16px;
+                width: 100%;
+                max-width: 420px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                max-height: 90vh;
+                overflow-y: auto;
+            }
 
-@app.route("/")
-def home():
-    return render_template("index.html")
+            h2 {
+                margin: 0 0 4px 0;
+                color: #111827;
+                font-size: 22px;
+            }
 
-@app.route("/check", methods=["POST"])
-def check():
-    url = request.json.get("url")
+            p {
+                color: #6b7280;
+                margin-bottom: 20px;
+                font-size: 14px;
+            }
 
-    if not url.startswith("http"):
-        url = "https://" + url
+            .input-row {
+                display: flex;
+                gap: 10px;
+            }
 
-    domain = urlparse(url).netloc.replace("www.", "")
-    risk = 0
-    brands = ["amazon" , "google" , "paypal" , "facebook" , "instagram" , "netflix" , "insta" , "fb"]
-    safe_domains = ["instagram.com" , "facebook.com","amazon.com" , "google.com" ,"paypal.com" , "netflix.com"]
-    if domain not in safe_domains:
-        for brand in brands:
-            if brand in domain:
-                risk += 3
-            else:
-                ratio = difflib.SequenceMatcher(None,brand,domain.split(".")[0]).ratio()    
-                if ratio >0.6:
-                    risk += 3
-    if "login" in domain or "secure" in domain or "verify" in domain:
-        risk +=1
+            .input {
+                flex: 1;
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                font-size: 14px;
+                outline: none;
+                transition: border 0.2s;
+            }
 
-    if len(domain) > 20:
-        risk += 1
+            .input:focus {
+                border-color: #2563eb;
+            }
 
-    if sum(c.isdigit() for c in domain) > 3:
-        risk += 1
+            button {
+                background: #2563eb;
+                color: white;
+                border: none;
+                padding: 10px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                transition: background 0.2s;
+            }
 
-    heuristic_flag = risk >= 2
-    
-    whois_info={}
-    try:
-        whois_res=requests.get(
-            f"https://whoisjson.com/api/v1/whois?domain={domain}",
-            headers={"Authorization":f"TOKEN={os.environ.get('WHOIS_API_KEY')}"},
-            timeout=10
-        )
-        whois_data = whois_res.json()
-        created = whois_data.get("created","")
-        expires = whois_data.get("expires","")
-        registrar = whois_data.get("registrar","")
-        country = whois_data.get("country","")
+            button:hover {
+                background: #1d4ed8;
+            }
 
-        age_days = None
-        if created:
-            try:
-                created_date = datetime.strptime(created[:10],"%Y-%m-%d")
-                age_days = (datetime.now() - created_date).days
-            except:
-                pass
+            #result {
+                margin-top: 20px;
+            }
 
-        whois_info = {
-                "created": created or "unknown",
-                "expires": expires or "unknown",
-                "registrar": registrar or "unknown",
-                "country": country or "unknown",
-                "age_days": age_days
-            }   
-        if age_days is not None and age_days < 30:
-                return jsonify({
-                    "status":"suspicious",
-                    "message":f"Domain is only {age_days} days old",
-                    "whois": whois_info
-                })
-    except:
-          pass
-    
-    body = {
-        "client": {"clientId": "cyberCheck", "clientVersion": "1.0"},
-        "threatInfo": {
-            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING"],
-            "platformTypes": ["ANY_PLATFORM"],
-            "threatEntryTypes": ["URL"],
-            "threatEntries": [{"url": url}]
-        }
-    }
+            .safe {
+                background: #d1fae5;
+                color: #065f46;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
+            }
 
-    res = requests.post(
-        f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={apikey}",
-        json=body
-    )
+            .suspicious {
+                background: #fef3c7;
+                color: #92400e;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
+            }
 
-    data = res.json()
+            .danger {
+                background: #fee2e2;
+                color: #991b1b;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
+            }
 
-    if "matches" in data:
-        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing","whois":whois_info})
+            .whois {
+                margin-top: 12px;
+                font-size: 13px;
+                color: #6b7280;
+                border-top: 1px solid #f3f4f6;
+                padding-top: 12px;
+            }
 
-    # 🔹 AI Check
-    try:
-        ai_res = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": f"""
-Analyze this URL for phishing risk.
+            .whois p {
+                margin: 4px 0;
+            }
 
-Only mark as "danger" if strong evidence exists.
-If unsure, reply "safe".
+            .history {
+                margin-top: 20px;
+                border-top: 1px solid #f3f4f6;
+                padding-top: 12px;
+            }
 
-Reply ONLY: safe, suspicious, or danger.
+            .history h4 {
+                margin: 0 0 8px 0;
+                font-size: 13px;
+                color: #9ca3af;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
 
-URL: {url}
-"""
-                    }
-                ]
-            },
-            timeout=25
-        )
+            .history-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 6px 0;
+                font-size: 13px;
+                border-bottom: 1px solid #f9fafb;
+            }
 
-        response_json = ai_res.json()
+            .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 6px;
+            }
 
-        if "choices" not in response_json:
-            return jsonify({"status": "suspicious", "message": str(response_json),"whois":whois_info})
+            .dot-safe { background: #10b981; }
+            .dot-suspicious { background: #f59e0b; }
+            .dot-danger { background: #ef4444; }
+            .spinner{
+                width:20px;
+                height:20px;
+                border:3px solid #e5e7eb;
+                border-top:3px solid #2563eb;
+                border-radius:50%;
+                animation:spin 0.8s linear infinite;
+                margin:10px auto;
+            }
 
-        verdict = response_json["choices"][0]["message"]["content"].strip().lower()
+            @keyframes spin{
+                to {transform: rotate(360deg);}
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h2>Cyph X</h2>
+            <p>Be Safe , Be Ready</p>
+            <div class="input-row">
+                <input id="domainInput" class="input" placeholder="www.vercel.com">
+                <button onclick="checkDomain()">Check</button>
+            </div>
+            <div id="result"></div>
+            <div id="history"></div>
+        </div>
+        <script>
+            let checkHistory = [];
 
-        if "danger" in verdict:
-            return jsonify({"status": "danger", "message": "AI flagged this as dangerous","whois":whois_info})
+            async function checkDomain(){
+                const val = document.getElementById("domainInput").value.trim();
+                const el = document.getElementById("result");
 
-        elif "suspicious" in verdict and heuristic_flag:
-            return jsonify({"status": "suspicious", "message": "Looks suspicious","whois":whois_info})
+                if(!val) return;
 
-        elif heuristic_flag:
-            return jsonify({"status": "suspicious", "message": "Suspicious pattern detected","whois":whois_info})
+                el.innerHTML = '<div class="spinner"></div>';
 
-        else:
-            return jsonify({"status": "safe", "message": "Looks safe","whois":whois_info})
+                const res = await fetch("/check",{
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({url: val})
+                });
+                const data = await res.json();
 
-    except Exception as e:
-        return jsonify({"status": "suspicious", "message": "Error analyzing URL","whois":whois_info})
- 
+                if(data.status === "safe"){
+                    el.innerHTML = `<div class="safe">${data.message}</div>`;
+                } else if(data.status === "suspicious"){
+                    el.innerHTML = `<div class="suspicious">${data.message}</div>`;
+                } else {
+                    el.innerHTML = `<div class="danger">${data.message}</div>`;
+                }
+
+                if(data.whois && data.whois.created){
+                    el.innerHTML += `
+                    <div class="whois">
+                        <p><b>Registered:</b> ${data.whois.created}</p>
+                        <p><b>Expires:</b> ${data.whois.expires}</p>
+                        <p><b>Registrar:</b> ${data.whois.registrar}</p>
+                        <p><b>Country:</b> ${data.whois.country}</p>
+                        ${data.whois.age_days !== null ? `<p><b>Domain Age:</b> ${data.whois.age_days} days</p>` : ""}
+                    </div>`;
+                }
+
+                checkHistory.unshift({url: val, status: data.status});
+                if(checkHistory.length > 5) checkHistory.pop();
+                renderHistory();
+            }
+
+            function renderHistory(){
+                const el = document.getElementById("history");
+                if(checkHistory.length === 0) return;
+                el.innerHTML = `<div class="history">
+                    <h4>Recent checks</h4>
+                    ${checkHistory.map(item => `
+                    <div class="history-item">
+                        <span><span class="dot dot-${item.status}"></span>${item.url}</span>
+                        <span>${item.status}</span>
+                    </div>`).join("")}
+                </div>`;
+            }
+        </script>
+    </body>
+</html>
