@@ -50,6 +50,7 @@ def check():
             headers={"Authorization":f"TOKEN={os.environ.get('WHOIS_API_KEY')}"},
             timeout=10
         )
+        return jsonify({"debug":whois_res.json(),"key_present":bool(os.environ.get('WHOIS_API_KEY'))})
         whois_data = whois_res.json()
         created = whois_data.get("created","")
         expires = whois_data.get("expires","")
