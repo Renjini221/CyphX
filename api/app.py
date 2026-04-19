@@ -22,65 +22,59 @@ def check():
 
     domain = urlparse(url).netloc.replace("www.", "")
     risk = 0
-    brands = ["amazon" , "google" , "paypal" , "facebook" , "instagram" , "netflix" , "insta" , "fb"]
-    safe_domains = ["instagram.com" , "facebook.com","amazon.com" , "google.com" ,"paypal.com" , "netflix.com"]
+    brands = ["amazon", "google", "paypal", "facebook", "instagram", "netflix", "insta", "fb"]
+    safe_domains = ["instagram.com", "facebook.com", "amazon.com", "google.com", "paypal.com", "netflix.com"]
+
     if domain not in safe_domains:
         for brand in brands:
             if brand in domain:
                 risk += 3
             else:
-                ratio = difflib.SequenceMatcher(None,brand,domain.split(".")[0]).ratio()    
-                if ratio >0.6:
+                ratio = difflib.SequenceMatcher(None, brand, domain.split(".")[0]).ratio()
+                if ratio > 0.6:
                     risk += 3
-    if "login" in domain or "secure" in domain or "verify" in domain:
-        risk +=1
 
+    if "login" in domain or "secure" in domain or "verify" in domain:
+        risk += 1
     if len(domain) > 20:
         risk += 1
-
     if sum(c.isdigit() for c in domain) > 3:
         risk += 1
 
     heuristic_flag = risk >= 2
-    
-    whois_info={}
+
+    whois_info = {}
     try:
-        whois_res=requests.get(
+        whois_res = requests.get(
             f"https://whoisjson.com/api/v1/whois?domain={domain}",
-            headers={"Authorization":f"TOKEN={os.environ.get('WHOIS_API_KEY')}"},
+            headers={"Authorization": f"TOKEN={os.environ.get('WHOIS_API_KEY')}"},
             timeout=10
         )
-        return jsonify({"debug":whois_res.json(),"key_present":bool(os.environ.get('WHOIS_API_KEY'))})
         whois_data = whois_res.json()
-        created = whois_data.get("created","")
-        expires = whois_data.get("expires","")
-        registrar = whois_data.get("registrar","")
-        country = whois_data.get("country","")
-
-        age_days = None
-        if created:
-            try:
-                created_date = datetime.strptime(created[:10],"%Y-%m-%d")
-                age_days = (datetime.now() - created_date).days
-            except:
-                pass
-
+        created = whois_data.get("created", "")
+        expires = whois_data.get("expires", "")
+        registrar = whois_data.get("registrar", {}).get("name", "")
+        country = whois_data.get("contacts", {}).get("owner", [{}])[0].get("country", "") or "unknown"
+        age_days = whois_data.get("age", {}).get("days", None)
         whois_info = {
-                "created": created or "unknown",
-                "expires": expires or "unknown",
-                "registrar": registrar or "unknown",
-                "country": country or "unknown",
-                "age_days": age_days
-            }   
+            "created": created or "unknown",
+            "expires": expires or "unknown",
+            "registrar": registrar or "unknown",
+            "country": country or "unknown",
+            "age_days": age_days
+        }
         if age_days is not None and age_days < 30:
-                return jsonify({
-                    "status":"suspicious",
-                    "message":f"Domain is only {age_days} days old",
-                    "whois": whois_info
-                })
+            return jsonify({
+                "status": "suspicious",
+                "message": f"Domain is only {age_days} days old",
+                "whois": whois_info
+            })
     except:
-          pass
-    
+        pass
+
+    if heuristic_flag:
+        return jsonify({"status": "suspicious", "message": "Suspicious pattern detected", "whois": whois_info})
+
     body = {
         "client": {"clientId": "cyberCheck", "clientVersion": "1.0"},
         "threatInfo": {
@@ -95,13 +89,11 @@ def check():
         f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={apikey}",
         json=body
     )
-
     data = res.json()
 
     if "matches" in data:
-        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing","whois":whois_info})
+        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing", "whois": whois_info})
 
-    # 🔹 AI Check
     try:
         ai_res = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -110,45 +102,29 @@ def check():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "gpt-4o-mini",
+                "model": "openai/gpt-4o-mini",
                 "messages": [
                     {
                         "role": "user",
-                        "content": f"""
-Analyze this URL for phishing risk.
-
+                        "content": f"""Analyze this URL for phishing risk.
 Only mark as "danger" if strong evidence exists.
 If unsure, reply "safe".
-
 Reply ONLY: safe, suspicious, or danger.
-
-URL: {url}
-"""
+URL: {url}"""
                     }
                 ]
             },
             timeout=25
         )
-
         response_json = ai_res.json()
-
         if "choices" not in response_json:
-            return jsonify({"status": "suspicious", "message": str(response_json),"whois":whois_info})
-
+            return jsonify({"status": "suspicious", "message": str(response_json), "whois": whois_info})
         verdict = response_json["choices"][0]["message"]["content"].strip().lower()
-
         if "danger" in verdict:
-            return jsonify({"status": "danger", "message": "AI flagged this as dangerous","whois":whois_info})
-
-        elif "suspicious" in verdict and heuristic_flag:
-            return jsonify({"status": "suspicious", "message": "Looks suspicious","whois":whois_info})
-
-        elif heuristic_flag:
-            return jsonify({"status": "suspicious", "message": "Suspicious pattern detected","whois":whois_info})
-
+            return jsonify({"status": "danger", "message": "AI flagged this as dangerous", "whois": whois_info})
+        elif "suspicious" in verdict:
+            return jsonify({"status": "suspicious", "message": "Looks suspicious", "whois": whois_info})
         else:
-            return jsonify({"status": "safe", "message": "Looks safe","whois":whois_info})
-
+            return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info})
     except Exception as e:
-        return jsonify({"status": "suspicious", "message": "Error analyzing URL","whois":whois_info})
- 
+        return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info})
