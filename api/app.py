@@ -104,7 +104,23 @@ def check():
 
     except Exception as e:
         redirect_info = {"error": str(e)}
+   
 
+    dns_info={}
+    try:
+        import socket
+        ips = socket.getaddrinfo(domain,None)
+        ip_list = list(set([ip[4][0] for ip in ips]))
+        dns_info = {
+            "resolved":True,
+            "ips" : ip_list,
+            "ip_count":len(ip_list)
+        }
+        if len(ip_list) == 1:
+            risk += 1
+    except socket.gaierror:
+        dns_info = {"resolved":False,"ips":[],"ip_count":0}
+        risk += 2
     heuristic_flag = risk >= 2
 
     if heuristic_flag:
