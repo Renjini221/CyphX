@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 import requests
 import os
 import difflib
+import socket
 from urllib.parse import urlparse
 from datetime import datetime
 
@@ -67,7 +68,9 @@ def check():
             return jsonify({
                 "status": "suspicious",
                 "message": f"Domain is only {age_days} days old",
-                "whois": whois_info
+                "whois": whois_info,
+                "redirect": {},
+                "dns": {}
             })
     except:
         pass
@@ -104,27 +107,26 @@ def check():
 
     except Exception as e:
         redirect_info = {"error": str(e)}
-   
 
-    dns_info={}
+    dns_info = {}
     try:
-        import socket
-        ips = socket.getaddrinfo(domain,None)
+        ips = socket.getaddrinfo(domain, None)
         ip_list = list(set([ip[4][0] for ip in ips]))
         dns_info = {
-            "resolved":True,
-            "ips" : ip_list,
-            "ip_count":len(ip_list)
+            "resolved": True,
+            "ips": ip_list,
+            "ip_count": len(ip_list)
         }
         if len(ip_list) == 1:
             risk += 1
     except socket.gaierror:
-        dns_info = {"resolved":False,"ips":[],"ip_count":0}
+        dns_info = {"resolved": False, "ips": [], "ip_count": 0}
         risk += 2
+
     heuristic_flag = risk >= 2
 
     if heuristic_flag:
-        return jsonify({"status": "suspicious", "message": "Suspicious pattern detected", "whois": whois_info, "redirect": redirect_info})
+        return jsonify({"status": "suspicious", "message": "Suspicious pattern detected", "whois": whois_info, "redirect": redirect_info, "dns": dns_info})
 
     body = {
         "client": {"clientId": "cyberCheck", "clientVersion": "1.0"},
@@ -143,7 +145,7 @@ def check():
     data = res.json()
 
     if "matches" in data:
-        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing", "whois": whois_info, "redirect": redirect_info})
+        return jsonify({"status": "danger", "message": "Flagged by Google Safe Browsing", "whois": whois_info, "redirect": redirect_info, "dns": dns_info})
 
     try:
         ai_res = requests.post(
@@ -169,13 +171,13 @@ URL: {url}"""
         )
         response_json = ai_res.json()
         if "choices" not in response_json:
-            return jsonify({"status": "suspicious", "message": str(response_json), "whois": whois_info, "redirect": redirect_info})
+            return jsonify({"status": "suspicious", "message": str(response_json), "whois": whois_info, "redirect": redirect_info, "dns": dns_info})
         verdict = response_json["choices"][0]["message"]["content"].strip().lower()
         if "danger" in verdict:
-            return jsonify({"status": "danger", "message": "AI flagged this as dangerous", "whois": whois_info, "redirect": redirect_info})
+            return jsonify({"status": "danger", "message": "AI flagged this as dangerous", "whois": whois_info, "redirect": redirect_info, "dns": dns_info})
         elif "suspicious" in verdict:
-            return jsonify({"status": "suspicious", "message": "Looks suspicious", "whois": whois_info, "redirect": redirect_info})
+            return jsonify({"status": "suspicious", "message": "Looks suspicious", "whois": whois_info, "redirect": redirect_info, "dns": dns_info})
         else:
-            return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info, "redirect": redirect_info})
+            return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info, "redirect": redirect_info, "dns": dns_info})
     except Exception as e:
-        return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info, "redirect": redirect_info})
+        return jsonify({"status": "safe", "message": "Looks safe", "whois": whois_info, "redirect": redirect_info, "dns": dns_info})
