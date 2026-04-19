@@ -54,9 +54,7 @@ def check():
         created = whois_data.get("created","")
         expires = whois_data.get("expires","")
         registrar = whois_data.get("registrar","")
-        if isinstance(registrar, dict):
-            registrar = registrar.get("name","unoknown")
-        country = whois_data.get("registrant",{}).get("country","") or whois_data.get("country","")
+        country = whois_data.get("country","")
 
         age_days = None
         if created:
