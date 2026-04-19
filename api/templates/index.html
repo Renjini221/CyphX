@@ -150,18 +150,19 @@
             .dot-safe { background: #10b981; }
             .dot-suspicious { background: #f59e0b; }
             .dot-danger { background: #ef4444; }
-            .spinner{
-                width:20px;
-                height:20px;
-                border:3px solid #e5e7eb;
-                border-top:3px solid #2563eb;
-                border-radius:50%;
-                animation:spin 0.8s linear infinite;
-                margin:10px auto;
+
+            .spinner {
+                width: 20px;
+                height: 20px;
+                border: 3px solid #e5e7eb;
+                border-top: 3px solid #2563eb;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                margin: 10px auto;
             }
 
-            @keyframes spin{
-                to {transform: rotate(360deg);}
+            @keyframes spin {
+                to { transform: rotate(360deg); }
             }
         </style>
     </head>
@@ -187,7 +188,7 @@
 
                 el.innerHTML = '<div class="spinner"></div>';
 
-                const res = await fetch("/check",{
+                const res = await fetch("/check", {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({url: val})
@@ -210,6 +211,18 @@
                         <p><b>Registrar:</b> ${data.whois.registrar}</p>
                         <p><b>Country:</b> ${data.whois.country}</p>
                         ${data.whois.age_days !== null ? `<p><b>Domain Age:</b> ${data.whois.age_days} days</p>` : ""}
+                    </div>`;
+                }
+
+                if(data.redirect && !data.redirect.error){
+                    el.innerHTML += `
+                    <div class="whois">
+                        <p><b>Final URL:</b> ${data.redirect.final_url}</p>
+                        <p><b>Redirects:</b> ${data.redirect.redirect_count}</p>
+                        <p><b>Status Code:</b> ${data.redirect.status_code}</p>
+                        <p><b>Domain Changed:</b> ${data.redirect.domain_changed ? "Yes" : "No"}</p>
+                        ${data.redirect.too_many_redirects ? "<p><b>Warning:</b> Too many redirects</p>" : ""}
+                        ${data.redirect.redirect_chain.length > 0 ? `<p><b>Chain:</b> ${data.redirect.redirect_chain.join(" → ")}</p>` : ""}
                     </div>`;
                 }
 
